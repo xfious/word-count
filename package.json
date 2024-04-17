@@ -2,7 +2,7 @@
   "name": "word-count",
   "displayName": "Word Count",
   "description": "Live word count",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Oliver Kovacs",
   "license": "MIT",
   "repository": {
@@ -33,7 +33,21 @@
         "command": "word-count.details",
         "title": "Word Count: Details"
       }
-    ]
+    ],
+    "configuration": {
+        "type": "object",
+        "title": "word-count configuration",
+        "properties": {
+            "word-count.activateLanguageId": {
+                "type": "array",
+                "default": [
+                "markdown",
+                "plaintext"
+                ],
+                "description": "The languages to activate this extension. Reload to take effect."
+            }
+        }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

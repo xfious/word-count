@@ -2,9 +2,12 @@
 
 import * as vscode from 'vscode';
 
+var statusBarItem: vscode.StatusBarItem;
+var activateLanguageId = vscode.workspace.getConfiguration('word-count').get<Array<string>>('activateLanguageId');
+
 export function activate({ subscriptions }: vscode.ExtensionContext) {
   // creates the status bar word counter
-  const statusBarItem = vscode.window.createStatusBarItem(
+  statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
     0
   );
@@ -24,7 +27,7 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
 
   // counts the number of words in a passed in string
   const count = (text: string): number => {
-    return text.split(/\s+/g).filter((word) => word).length;
+    return (text.match(/[a-zA-Z0-9]+/g) || []).length;
   };
 
   // gets the document from the active text editor, and then returns the text in the document. If text is selected, return that text instead
@@ -35,11 +38,11 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
     const selectionRange =
       selection && !selection.isEmpty
         ? new vscode.Range(
-            selection.start.line,
-            selection.start.character,
-            selection.end.line,
-            selection.end.character
-          )
+          selection.start.line,
+          selection.start.character,
+          selection.end.line,
+          selection.end.character
+        )
         : null;
 
     return selectionRange
@@ -60,6 +63,22 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
 
   // invoking this gets the text from the doc, counts the words, and then updates the status bar text
   const setWordCount = (): null | void => {
+    let currentEditor = vscode.window.activeTextEditor;
+    if (currentEditor === undefined) {
+      statusBarItem.hide();
+      return null;
+    }
+    let currentLanguageId = currentEditor.document.languageId;
+    console.log('Current language ID: ' + currentLanguageId, 'Activate language ID: ' + activateLanguageId);
+    if (activateLanguageId !== undefined
+      && activateLanguageId !== null
+      && activateLanguageId.includes(currentLanguageId) === true) {
+      statusBarItem.show();
+    } else {
+      statusBarItem.hide();
+      return null;
+    }
+
     const text = getText();
     if (text === null) return null;
     const words = count(text);
@@ -72,7 +91,12 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
   statusBarItem.command = 'word-count.details';
 
   vscode.workspace.onDidChangeTextDocument(setWordCount);
+  vscode.window.onDidChangeActiveTextEditor(setWordCount);
   vscode.window.onDidChangeTextEditorSelection(setWordCount);
 }
 
-export function deactivate() {}
+export function deactivate() {
+  if (statusBarItem) {
+    statusBarItem.dispose();
+  }
+}
