@@ -27,7 +27,7 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
 
   // counts the number of words in a passed in string
   const count = (text: string): number => {
-    return (text.match(/[a-zA-Z0-9]+/g) || []).length;
+    return (text.match(/[\w-]+(?<!-)\b/g) || []).length;
   };
 
   // gets the document from the active text editor, and then returns the text in the document. If text is selected, return that text instead
