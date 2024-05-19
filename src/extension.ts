@@ -5,6 +5,17 @@ import * as vscode from 'vscode';
 var statusBarItem: vscode.StatusBarItem;
 var activateLanguageId = vscode.workspace.getConfiguration('word-count').get<Array<string>>('activateLanguageId');
 
+var countSplitRegexpRaw = vscode.workspace.getConfiguration('word-count').get<string>('countSplitRegexp') || "\\s+";
+var countSplitRegexp = new RegExp(countSplitRegexpRaw, 'g');
+var countMatchRegexpRaw = vscode.workspace.getConfiguration('word-count').get<string>('countMatchRegexp');
+var countMatchRegexp = (countMatchRegexpRaw == undefined || countMatchRegexpRaw === '') ? undefined : new RegExp(countMatchRegexpRaw, 'g');
+var filterExcludeRegexpRaw = vscode.workspace.getConfiguration('word-count').get<string>('filterExcludeRegexp');
+var filterExcludeRegexp = (filterExcludeRegexpRaw == undefined || filterExcludeRegexpRaw === '') ? undefined : new RegExp(filterExcludeRegexpRaw, "g");
+var filterEmpty = vscode.workspace.getConfiguration('word-count').get<boolean>('filterEmpty');
+filterEmpty = (filterEmpty == undefined) ? true : filterEmpty;
+
+var maxCharLimit = vscode.workspace.getConfiguration('word-count').get<number>('maxCharLimit') || -1;
+
 export function activate({ subscriptions }: vscode.ExtensionContext) {
   // creates the status bar word counter
   statusBarItem = vscode.window.createStatusBarItem(
@@ -26,8 +37,27 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
   );
 
   // counts the number of words in a passed in string
-  const count = (text: string): number => {
-    return (text.match(/[\w-]+(?<!-)\b/g) || []).length;
+  const count = (text: string, hasMaxCharLimit = true): number => {
+    // if the text is longer than the max char limit, return -1
+    // no limit if maxCharLimit is set to -1
+    if (hasMaxCharLimit && text.length > maxCharLimit && maxCharLimit > 0) {
+      return -1;
+    }
+
+    let words = [];
+    if (countMatchRegexp) {
+      words = text.match(countMatchRegexp) || [];
+    } else {
+      words = text.split(countSplitRegexp) || [];
+    }
+    if (filterExcludeRegexp) {
+      //@ts-ignore
+      return words.filter((word: string) => !filterExcludeRegexp.test(word)).length;
+    }
+    if (filterEmpty) {
+      return words.filter((word: string) => word).length;
+    }
+    return words.length;
   };
 
   // gets the document from the active text editor, and then returns the text in the document. If text is selected, return that text instead
@@ -56,7 +86,7 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
       const text = getText();
       if (text === null) return null;
       vscode.window.showInformationMessage(
-        `Words: ${count(text)} Characters: ${text.length}`
+        `Words: ${count(text, true)} Characters: ${text.length}`
       );
     })
   );

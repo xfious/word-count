@@ -45,6 +45,31 @@
                 "plaintext"
                 ],
                 "description": "The languages to activate this extension. Reload to take effect."
+            },
+            "word-count.countSplitRegexp": {
+                "type": "string",
+                "default": "\\s+",
+                "description": "The regular expression to split words. Example: \\s+"
+            },
+            "word-count.countMatchRegexp": {
+                "type": "string",
+                "default": "",
+                "description": "The regular expression to match words, overriding countSplitRegexp. Example: [\\w-']+\\b"
+            },
+            "word-count.filterExcludeRegexp": {
+                "type": "string",
+                "default": "",
+                "description": "The regular expression to exclude words. It works after splitting or matching."
+            },
+            "word-count.filterEmpty": {
+                "type": "boolean",
+                "default": true,
+                "description": "Filter empty words after splitting or matching."
+            },
+            "word-count.maxCharLimit": {
+                "type": "number",
+                "default": -1,
+                "description": "The maximum number of characters to count. -1 means no limit."
             }
         }
     }
